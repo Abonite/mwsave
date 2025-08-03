@@ -10,7 +10,7 @@ use load::*;
 
 #[derive(Parser)]
 #[command(author="Abonite")]
-#[command(version="0.1.1")]
+#[command(version="0.1.3")]
 #[command(about="Encode the file into an audio file so you can record it on tape.")]
 struct Cli {
     #[command(subcommand)]
@@ -152,9 +152,29 @@ mod test {
     }
 
     #[test]
-    fn test_to_wav() {
-        let data = vec![1, 2, 3, 4];
-        let wav_data = toWav("test", data.clone(), 32, 44100, 1000.0, 0.0);
-        assert!(!wav_data.is_empty());
+    fn load_file() {
+        let load_file = String::from("./output.wav");
+        let mut reader = hound::WavReader::open(&load_file).expect(format!("Failed to open WAV file: {}", &load_file).as_str());
+        let wav_data = reader.samples::<f32>()
+            .map(|s| s.expect("Failed to read sample"))
+            .collect::<Vec<f32>>();
+
+        let loaded_datas = toBit(wav_data, 32, 44100, 2000.0, 0.0);
+        let info = getFileInfo(loaded_datas);
+
+        println!("Find file: {}", info.file_name);
+        println!("Size: {} Byte", info.data.len());
+        println!("Wav Hash value: {}", info.hash_value);
+        println!("local Hash value: {}", info.check_value);
+        if info.hash_value == info.check_value {
+            eprintln!("Hash value check pass!");
+        } else {
+            eprintln!("Hash value does not match the check value!");
+        }
+
+        let file_path = PathBuf::from(".\\");
+        let file_path = file_path.join(info.file_name);
+        let mut load_file_handle = File::create(file_path.clone()).expect(format!("Failed to create file: {}", file_path.to_str().expect("Failed to get file path")).as_str());
+        load_file_handle.write_all(info.data.as_slice()).expect("Failed to write file name");
     }
 }

@@ -77,7 +77,7 @@ pub fn getFileInfo(data_byte: Vec<u8>) -> FileInfo {
     let file_name = info_p[0];
     let file_size = usize::from_str_radix(info_p[1], 10).expect("Failed to parse file size");
     let hash_value = info_p[2].to_string();
-    let data = data_byte[ei + 15..ei + 14 + file_size].to_vec();
+    let data = data_byte[ei + 15..ei + 15 + file_size].to_vec();
 
     let md5_checker = Sha256::digest(data.clone()).to_vec();
     let md5_checker = md5_checker.iter().map(|b| format!("{:02x}", b)).collect::<String>();
