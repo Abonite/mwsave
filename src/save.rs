@@ -14,7 +14,8 @@ pub fn generateCarrier(sampling_frequency: u32, carrier_frequency: f64, init_phy
 }
 
 pub fn toWav(file_name: &str, source_data: Vec<u8>, bit_ext_point_num: u16, sampling_frequency: u32, carrier_frequency: f64, init_phy: f64) -> Vec<f32> {
-    let md5_checker = String::from_utf8(Sha256::digest(source_data.clone()).to_ascii_lowercase()).expect("Failed to convert hash to string");
+    let md5_checker = Sha256::digest(source_data.clone()).to_vec();
+    let md5_checker = md5_checker.iter().map(|b| format!("{:02x}", b)).collect::<String>();
 
     let mut final_data = Vec::from(format!("File info:{},{},{}.End file info.", file_name, source_data.len(), md5_checker));
     final_data.extend(source_data);

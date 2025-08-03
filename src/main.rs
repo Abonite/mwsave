@@ -41,15 +41,15 @@ struct Cli {
 enum Mode {
     /// Convert the software to mono wav audio files
     Save {
-        #[arg(long, short='i', value_parser=clap::value_parser!(OsString))]
+        #[arg(long, short='i', value_parser=clap::value_parser!(String))]
         input_file: String,
 
-        #[arg(long, short='o', default_value="output.wav", value_parser=clap::value_parser!(OsString))]
+        #[arg(long, short='o', default_value="output.wav", value_parser=clap::value_parser!(String))]
         output_file: String,
     },
     /// Trying to decode a mono wav file
     Load {
-        #[arg(long, short='l', default_value="output.wav", value_parser=clap::value_parser!(OsString))]
+        #[arg(long, short='l', default_value="output.wav", value_parser=clap::value_parser!(String))]
         load_file: String
     },
 }
@@ -138,5 +138,23 @@ fn main() {
             let mut load_file_handle = File::create(file_path.clone()).expect(format!("Failed to create file: {}", file_path.to_str().expect("Failed to get file path")).as_str());
             load_file_handle.write_all(info.data.as_slice()).expect("Failed to write file name");
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn save_file() {
+        let wav_data = toWav("test", vec![255, 254, 253, 253], 32, 44100, 1000.0, 0.0);
+        println!("Generated WAV data length: {}", wav_data.len());
+    }
+
+    #[test]
+    fn test_to_wav() {
+        let data = vec![1, 2, 3, 4];
+        let wav_data = toWav("test", data.clone(), 32, 44100, 1000.0, 0.0);
+        assert!(!wav_data.is_empty());
     }
 }
