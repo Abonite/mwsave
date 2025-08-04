@@ -28,10 +28,6 @@ source_bits = randi([0, 1], [Simulation_bit_number, 1]);
 %% Determine parameters
 switch Modulate_mode
     case "Manual"
-        prb_num = ceil(Simulation_bit_number / Modulate_level);
-        group_num = prb_num / total_data_symbol_per_group; %The decimal part indicates an incomplete group
-
-        
     case "Auto"
     otherwise
         err_id = "mwsave_analyze:SimulationParameterError";
