@@ -1,37 +1,41 @@
-clear;
+FILE_PATH = "";
+%% SETTINGS
+% FRAME:
+% SYNC | FRAME_INFO | DMRS | DATA | DATA | ... | DATA | DMRS | DATA | ... | SYNC | ......
+SAMPLIE_RATE = 441000;  %Hz
+FFT_SIZE = 512;
+CP_SIZE = 4;
+USE_DMRS = true;
+DATA_SYMBOL_NUMBER_PER_GROUP = 9;
+MAX_MODULATION_LEVEL = 8;
+BIT_RATE = 1/3;
 
-Audio_sympling_frequence = 44100;
-FFT_point = 32;
-Cp_length = 4;
-Audio_band_width = 20000;
-Max_per_group_data_symbol_number = 32;
-Dmrs_in_per_symbol = 3;
-Dmrs_in_per_group = 10;
+MAX_FREQ = 20000;       %Hz
+MIN_FREQ = 20;          %Hz
 
-Modulate_mode = "Manual"; %%or Auto
-Modulate_type = "High Order Modulation Priority"; %%or High Bitrate Priority; only effect in auto mode
-Modulate_level = 1;
-LDPC_bitrate = 5/6;
+SUBCARRIER_SPACING = SAMPLIE_RATE / FFT_SIZE;
+AVAILABLE_SUBCARRIER_INDEX = (ceil(MIN_FREQ / SUBCARRIER_SPACING) + 1):((MAX_FREQ / SUBCARRIER_SPACING) - (ceil(MIN_FREQ / SUBCARRIER_SPACING)));
 
-Simulation_bit_number = 10000;
+if mod(length(AVAILABLE_SUBCARRIER_INDEX), 2) == 0
+    SYNC_ZC = zadoffChuSeq(13, length(AVAILABLE_SUBCARRIER_INDEX) + 1);
+    SYNC_ZC = SYNC_ZC(1:end - 1, 1);
 
-%% Caculate the system parameters
-sub_carrier_interval = Audio_sympling_frequence / FFT_point;
-sub_carrier_number = floor(Audio_band_width / sub_carrier_interval);
-
-dmrs_interval_in_frequency = floor(32 / dmrs_in_per_symbol);
-dmrs_interval_in_time = floor(32 / dmrs_in_per_group);
-total_dmrs_symbol_per_group = Dmrs_in_per_group * Dmrs_in_per_symbol;
-total_data_symbol_per_group = (Max_per_group_data_symbol_number * sub_carrier_number) - total_dmrs_symbol_per_group;
-%% Generate source bits
-source_bits = randi([0, 1], [Simulation_bit_number, 1]);
-%% Determine parameters
-switch Modulate_mode
-    case "Manual"
-    case "Auto"
-    otherwise
-        err_id = "mwsave_analyze:SimulationParameterError";
-        err_msg = sprintf("Unknown Modulate_mode: %s", Modulate_mode);
-        UnknowSPException = MException(err_id, err_msg);
-        throw(UnknowSPException);
+    DMRS_ZC = zadoffChuSeq(31, length(AVAILABLE_SUBCARRIER_INDEX) + 1);
+    DMRS_ZC = DMRS_ZC(1:end - 1, 1);
+else
+    SYNC_ZC = zadoffChuSeq(13, length(AVAILABLE_SUBCARRIER_INDEX));
+    DMRS_ZC = zadoffChuSeq(31, length(AVAILABLE_SUBCARRIER_INDEX));
 end
+
+FRAME_INFO = struct(...
+    "sample_rate", SAMPLIE_RATE, ...
+    "fft_size", FFT_SIZE, ...
+    "cp_size", CP_SIZE, ...
+    "dsnpg", DATA_SYMBOL_NUMBER_PER_GROUP, ...
+    "asi", AVAILABLE_SUBCARRIER_INDEX, ...
+    "use_dmrs", USE_DMRS, ...
+    "sync", SYNC_ZC, ...
+    "dmrs", DMRS_ZC ...
+);
+%%
+bitlevel = bit_level(0, FRAME_INFO, MAX_MODULATION_LEVEL, BIT_RATE);
